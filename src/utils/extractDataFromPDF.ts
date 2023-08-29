@@ -14,28 +14,31 @@ export const extractTableDataFromPDF = async (pdfData: any ) => {
             //@ts-ignore
             if(pageText.items[i].str === 'Descripción' && pageText.items[i+2].str === 'Número Guia Identificación'){
                 
-                for(let j = i+4; j < pageText.items.length; j++){
+                for(let j = i+8; j < pageText.items.length; j +=8){
+
                     if((j+1) > pageText.items.length || (j+2) > pageText.items.length || (j+4) > pageText.items.length || (j+6) > pageText.items.length){
                         break;
                     }else{
-                        
-                        tableData.push({
-                            //@ts-ignore
-                            description: pageText.items[j].str,
-                            //@ts-ignore
-                            numGuia: pageText.items[j+2].str,
-                            //@ts-ignore
-                            descGuia: pageText.items[j+4].str,
-                            //@ts-ignore
-                            //pesoGuia: pageText.items[j+6].str,
-                        })
+
+                        //@ts-ignore
+                        const pesoGuia = +pageText.items[j+6].str
+                        if(!isNaN(pesoGuia)){
+                            tableData.push({
+                                //@ts-ignore
+                                description: pageText.items[j].str,
+                                //@ts-ignore
+                                numGuia: pageText.items[j+2].str,
+                                //@ts-ignore
+                                descGuia: pageText.items[j+4].str,
+                                //@ts-ignore
+                                pesoGuia: pageText.items[j+6].str,
+                            })
+                        }
                     }
                 }
             }
         }
     }
   
-    console.log(tableData);
-    // return tableData;
-    return [];
+     return tableData;
   };
