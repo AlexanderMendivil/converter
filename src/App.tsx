@@ -1,18 +1,16 @@
 import { useState } from 'react'
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-
+import { DataGrid} from '@mui/x-data-grid';
+import { Box, Button, Grid, Input } from '@mui/material';
 import { extractTableDataFromPDF } from './utils/extractDataFromPDF';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 import './App.css'
+import { columns } from './utils/dataColumns';
 
 function App() {
 
   const [tableData, setTableData] = useState<any>(null);
+  const [showExcelButton, setShowExcelButton] = useState<boolean>(false);
   
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if(!event?.target?.files) return;
@@ -31,40 +29,52 @@ function App() {
       };
   
       fileReader.readAsArrayBuffer(file);
+
+      setShowExcelButton(true);
     }
-  };
+  }
   
+  const handleExportExcel = () => {
+
+    const ws = XLSX.utils.json_to_sheet(tableData);
+    const wb = {Sheets: {'data': ws}, SheetNames: ['data']};
+    const excelBuffer = XLSX.write(wb, {bookType: 'xlsx', type: 'array'});
+    const data = new Blob([excelBuffer], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'});
+    
+    FileSaver.saveAs(data, 'exported_data.xlsx');
+
+  }
   return (
     <>
-      <div>
-        <input type="file" accept='.pdf' onChange={handleFileUpload} />
-        <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} aria-label="simple table">
-        <TableHead>
-          <TableRow>
-            <TableCell align="right">Descripción</TableCell>
-            <TableCell align="right">Número de guía identificación</TableCell>
-            <TableCell align="right">Descripción guía de identificación</TableCell>
-            <TableCell align="right">Peso guía identificación</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          { tableData ? tableData.map((row: any, index: number) => (
-            <TableRow
-              key={index}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
-            
-              <TableCell align="right">{row.description}</TableCell>
-              <TableCell align="right">{row.numGuia}</TableCell>
-              <TableCell align="right">{row.descGuia}</TableCell>
-              <TableCell align="right">{row.pesoGuia}</TableCell>
-            </TableRow>
-          )) : null}
-        </TableBody>
-      </Table>
-    </TableContainer>
-      </div>
+    <Grid container justifyContent="center">
+
+      <Grid item xs={16}>
+
+        <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+            <Input type="file" inputProps={{accept:"application/pdf"}} onChange={handleFileUpload} />
+            {
+              showExcelButton ? <Button variant="outlined" onClick={handleExportExcel}>Exportar Excel</Button> : null
+            }
+        </Box>
+        </Grid>
+
+        <Grid item xs={2} />
+        <Grid item xs={12}>
+
+        <DataGrid
+        columns={columns}
+        getRowId={(row) => row?.numGuia}
+        initialState={{
+          pagination: {
+            paginationModel: { page: 0, pageSize: 10 },
+          },
+        }}
+        rows={tableData ?? []}
+        pageSizeOptions={[5, 10]}
+        />
+    <Grid item xs={2} />
+    </Grid>
+    </Grid>
     </>
   )
 }
