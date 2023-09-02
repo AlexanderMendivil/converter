@@ -1,4 +1,5 @@
 import * as PDFJS from 'pdfjs-dist'
+import { GuideModel } from '../models/guideModel';
 PDFJS.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS.version}/pdf.worker.js`;
 
 export const extractTableDataFromPDF = async (pdfData: any ) => {
@@ -31,8 +32,8 @@ export const extractTableDataFromPDF = async (pdfData: any ) => {
                                 //@ts-ignore
                                 descGuia: pageText.items[j+4].str,
                                 //@ts-ignore
-                                pesoGuia: pageText.items[j+6].str,
-                            })
+                                pesoGuia: +pageText.items[j+6].str,
+                            } as GuideModel)
                         }
                     }
                 }
